@@ -4,11 +4,12 @@ import math
 
 # keyword=input("Enter encryption key:")
 # text=input("Enter text to be encrypted:")
-keyword="HEU(3JD)9"
-text="38jjj"
+keyword="GYBNQKURP"
+text="Act"
 
 special="!@#$%^&*()_+-=~`<>?,./:\";'[]{}\|"
-valid=string.ascii_uppercase+string.digits+special
+# valid=string.ascii_uppercase+string.digits+special
+valid=string.ascii_uppercase
 total_chars=len(valid)
 def batch_size(keyword):
     keylen=len(keyword)
@@ -46,7 +47,7 @@ def convert_text_to_word_matrix(keyword,text):
     n=batch_size(keyword)
     # if len(text)<n:
     #     print("Please try again with a shorter keyword!")
-    #     exit
+    #     exit(0)
     rem=len(text)%n
     
     if(rem!=0):
@@ -64,7 +65,7 @@ def convert_text_to_word_matrix(keyword,text):
 convert_to_mod_valid=np.vectorize(lambda x:x%total_chars)
 convert_to_numeric=np.vectorize(lambda x:valid.index(x))
 convert_to_chars=np.vectorize(lambda x:valid[x])
-# convert_to_int_type=np.vectorize(lambda x:int(x))
+round_off=np.vectorize(lambda x:int(np.rint(x)))
 # key_arr_numeric=convert_to_numeric(key_arr)
 # text_arr_numeric=convert_to_numeric(te)
 def convert_to_numeric_key_array(key_arr):
@@ -92,12 +93,13 @@ def check_determinant_of_encryption_key(key_arr_numeric):
     if det<0:
         det=det%total_chars
     #check gcd
-    if math.gcd(det,total_chars)!=1:
-        print("Determinant Invalid. Please try a different key")
-        return False
-    else:
-        print("Valid Determinant. Can proceed with this key")
-        return True
+    # if math.gcd(det,total_chars)!=1:
+    #     print("Determinant Invalid. Please try a different key")
+    #     return False
+    # else:
+    #     print("Valid Determinant. Can proceed with this key")
+    #     return True
+    return True
 def multiply(key_arr_numeric, text_arr_numeric):
     print("entered multiply with")
     print(key_arr_numeric)
@@ -117,7 +119,7 @@ def encrypt(keyword,text):
 
     isvalidkey=check_determinant_of_encryption_key(key_arr_numeric)
     if not isvalidkey:
-        exit
+        exit(0)
     result=multiply(key_arr_numeric, text_arr_numeric)
     char_arr=convert_to_chars(result)
     print(char_arr)
@@ -130,7 +132,13 @@ def encrypt(keyword,text):
 def create_decrypt_key(keyword,cipher):
     key_arr=convert_keyword_to_word_matrix(keyword)
     key_arr_numeric=convert_to_numeric_key_array(key_arr)
+    det=np.linalg.det(key_arr_numeric)
+    det=int(det)
+    if det==0:
+        print("Decryption wont work with this keyword, pls try again with diff key")
+        exit(0)
     dec_key=np.linalg.inv(key_arr_numeric)
+    dec_key=convert_to_mod_valid(dec_key) 
     return dec_key
 def decrypt(keyword,cipher):
     dec_key=create_decrypt_key(keyword,cipher)
@@ -143,7 +151,12 @@ def decrypt(keyword,cipher):
     print("cipher_arr_numeric")
     print(cipher_arr_numeric)
     result=multiply(dec_key, cipher_arr_numeric)
+    result=round_off(result)
+    result=convert_to_mod_valid(result)
+    print("DECRYPTED FINAL RESULT ARRAY")
+    print(result)
     char_arr=convert_to_chars(result)
+    
     print("CHAR ARRAY")
     print(char_arr)
     decrypted=""
@@ -154,6 +167,6 @@ def decrypt(keyword,cipher):
     return decrypted
 
 cipher=encrypt(keyword,text)
-print(f"CIPHER={cipher}")
+print(f"CIPHER={cipher}\n\n\n\n\n")
 plaint=decrypt(keyword,cipher)
 print(f"DECRYPTED={plaint}")
