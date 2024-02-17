@@ -44,22 +44,44 @@ def convert_keyword_to_word_matrix(keyword):
     print(key_arr)
     return key_arr
 def convert_text_to_word_matrix(keyword,text):
+    print("entered convert text to word matix with keyword=",keyword," text=",text)
+    print(f"lenth of text",len(text))
+    text = text.replace('\x00', '') #removing null characters
     n=batch_size(keyword)
+    print("and n=",n)
     # if len(text)<n:
     #     print("Please try again with a shorter keyword!")
     #     exit(0)
     rem=len(text)%n
-    
+    print("rem=",rem)
     if(rem!=0):
         pad=(n-rem)
+        # text_copy=text+('z'*pad)
+        text_copy=text
+        for i in range(pad):
+            text_copy=text_copy+'0'
+        print("pad=",pad)
     else:
-        pad=0
-    text_copy=text+(text[-1]*pad)
+        text_copy=text
+    # text_copy=text+(text[-1]*pad)
+    
+    
     print(f"rem={rem},text_copy={text_copy}")
     text_copy=text_copy.upper()
-    text_arr=[ch for ch in text_copy]
+    print(f"lenth of text_copy",len(text_copy))
+    print("upper text copy",text_copy)
+    # text_arr=[ch for ch in text_copy]
+    text_arr=[]
+    for ch in text_copy:
+        text_arr.append(ch)
+    print("text_Arr1")
+    print(text_arr)
     text_arr=np.array(text_arr)
+    print("text_Arr2")
+    print(text_arr)
     text_arr=text_arr.reshape(-1,n)
+    print("before returning")
+    print(text_arr)
     return text_arr
 
 convert_to_mod_valid=np.vectorize(lambda x:x%total_chars)
@@ -121,15 +143,27 @@ def encrypt(keyword,text):
     if not isvalidkey:
         exit(0)
     result=multiply(key_arr_numeric, text_arr_numeric)
+    # return result
     char_arr=convert_to_chars(result)
     print(char_arr)
     # encrypted=""
     # for i in char_arr:
     #     encrypted
+    
     encrypted=char_arr.tostring().decode('utf-8')
     print(encrypted)
     return encrypted
-def create_decrypt_key(keyword,cipher):
+# def convert_to_string(result):
+#     char_arr=convert_to_chars(result)
+#     print(char_arr)
+#     # encrypted=""
+#     # for i in char_arr:
+#     #     encrypted
+    
+#     encrypted=char_arr.tostring().decode('utf-8')
+#     print(encrypted)
+#     return encrypted
+def create_decrypt_key(keyword):
     key_arr=convert_keyword_to_word_matrix(keyword)
     key_arr_numeric=convert_to_numeric_key_array(key_arr)
     det=np.linalg.det(key_arr_numeric)
@@ -137,11 +171,18 @@ def create_decrypt_key(keyword,cipher):
     if det==0:
         print("Decryption wont work with this keyword, pls try again with diff key")
         exit(0)
-    dec_key=np.linalg.inv(key_arr_numeric)
+    elif det < 0:
+        det = det % total_chars
+    det_inv = None #modular multiplicative inverse
+    for i in range(total_chars):
+        if (det * i) % total_chars == 1:
+            det_inv = i
+            break
+    dec_key=det_inv*det*np.linalg.inv(key_arr_numeric)
     dec_key=convert_to_mod_valid(dec_key) 
     return dec_key
 def decrypt(keyword,cipher):
-    dec_key=create_decrypt_key(keyword,cipher)
+    dec_key=create_decrypt_key(keyword)
     print("dec_key")
     print(dec_key)
     cipher_arr=convert_text_to_word_matrix(keyword,cipher)
